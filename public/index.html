@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>RUNBOOK — Basis Pengetahuan Tim IT</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1220;
+    --paper:#F6F7FA;
+    --surface:#FFFFFF;
+    --wire:#0EA5A5;
+    --wire-soft:#E3F6F6;
+    --status-ok:#1FA34D;
+    --status-ok-soft:#E5F7EB;
+    --status-warn:#C97A0E;
+    --status-warn-soft:#FDF1DF;
+    --status-crit:#D33B3B;
+    --status-crit-soft:#FBE7E7;
+    --line:#E3E6EC;
+    --text-soft:#5B6472;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .display{font-family:'IBM Plex Sans Condensed', sans-serif; font-weight:700;}
+  .mono{font-family:'IBM Plex Mono', monospace;}
+
+  /* TOPBAR */
+  .topbar{
+    background:var(--ink);
+    color:#fff;
+    padding:18px 24px;
+    position:sticky; top:0; z-index:20;
+  }
+  .topbar-row{
+    max-width:1000px; margin:0 auto;
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  }
+  .wordmark{
+    font-family:'IBM Plex Sans Condensed', sans-serif;
+    font-weight:700; font-size:22px; letter-spacing:0.5px;
+    color:#fff; white-space:nowrap;
+  }
+  .wordmark span{color:var(--wire);}
+  .counter{
+    font-family:'IBM Plex Mono', monospace; font-size:12px;
+    color:#9AA5B4; white-space:nowrap;
+  }
+  .search-wrap{flex:1; min-width:180px;}
+  #searchInput{
+    width:100%; padding:9px 14px;
+    border-radius:8px; border:1px solid #2A3446;
+    background:#131D2E; color:#fff; font-size:14px;
+    font-family:'IBM Plex Sans', sans-serif;
+    outline:none;
+  }
+  #searchInput::placeholder{color:#6B7688;}
+  #searchInput:focus{border-color:var(--wire);}
+
+  .btn-new{
+    background:var(--wire); color:#00201F;
+    border:none; border-radius:8px;
+    padding:10px 16px; font-weight:600; font-size:13.5px;
+    cursor:pointer; white-space:nowrap;
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .btn-new:hover{filter:brightness(1.06);}
+
+  /* MAIN */
+  .main{max-width:1000px; margin:0 auto; padding:22px 24px 60px;}
+
+  .filter-row{
+    display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;
+  }
+  .chip{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px; padding:7px 12px; border-radius:999px;
+    border:1px solid var(--line); background:var(--surface);
+    color:var(--text-soft); cursor:pointer; white-space:nowrap;
+  }
+  .chip.on{background:var(--ink); color:#fff; border-color:var(--ink);}
+
+  .empty-state{
+    text-align:center; padding:60px 20px; color:var(--text-soft);
+  }
+  .empty-state .display{font-size:20px; color:var(--ink); margin-bottom:6px;}
+  .empty-state p{font-size:14px; margin:4px 0;}
+
+  /* LOG LIST */
+  .log-list{background:var(--surface); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  .log-entry{border-bottom:1px solid var(--line);}
+  .log-entry:last-child{border-bottom:none;}
+
+  .log-head{
+    display:flex; align-items:flex-start; gap:12px;
+    padding:14px 18px; cursor:pointer;
+  }
+  .log-head:hover{background:#FAFBFD;}
+  .status-dot{
+    width:10px; height:10px; border-radius:50%; margin-top:6px; flex:none;
+  }
+  .dot-ok{background:var(--status-ok);}
+  .dot-warn{background:var(--status-warn);}
+  .dot-crit{background:var(--status-crit);}
+
+  .log-main{flex:1; min-width:0;}
+  .log-tagrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11px;
+    color:var(--text-soft); text-transform:uppercase; letter-spacing:0.5px;
+    margin-bottom:3px;
+  }
+  .log-title{font-family:'IBM Plex Sans Condensed', sans-serif; font-weight:700; font-size:16.5px; margin-bottom:3px;}
+  .log-excerpt{font-size:13.5px; color:var(--text-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .log-meta{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:#9AA5B4;
+    white-space:nowrap; margin-top:6px; flex:none; text-align:right;
+  }
+  .chevron{font-size:12px; color:var(--text-soft); margin-top:6px; flex:none;}
+
+  .log-detail{
+    display:none;
+    padding:0 18px 20px 40px;
+    border-top:1px dashed var(--line);
+  }
+  .log-detail.open{display:block;}
+  .detail-block{margin-top:16px;}
+  .detail-label{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:600;
+    text-transform:uppercase; letter-spacing:0.8px; color:var(--wire);
+    border-left:3px solid var(--wire); padding-left:8px; margin-bottom:8px;
+  }
+  .detail-text{font-size:14px; line-height:1.6; color:var(--ink); white-space:pre-wrap;}
+  .steps-list{margin:0; padding-left:20px; font-size:14px; line-height:1.8;}
+  .tag-pills{display:flex; flex-wrap:wrap; gap:6px; margin-top:14px;}
+  .tag-pill{
+    font-family:'IBM Plex Mono', monospace; font-size:11px;
+    background:var(--wire-soft); color:var(--wire); border-radius:6px;
+    padding:4px 9px;
+  }
+  .detail-actions{display:flex; gap:8px; margin-top:18px;}
+  .btn-small{
+    font-size:12.5px; font-weight:600; padding:8px 14px; border-radius:7px;
+    cursor:pointer; font-family:'IBM Plex Sans', sans-serif; border:1px solid var(--line);
+    background:var(--surface); color:var(--ink);
+  }
+  .btn-small.danger{color:var(--status-crit); border-color:#F1CACA;}
+
+  /* MODAL */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(11,18,32,0.55);
+    z-index:50; align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--surface); border-radius:12px; width:100%; max-width:620px;
+    padding:26px 26px 22px;
+  }
+  .modal-title{font-family:'IBM Plex Sans Condensed', sans-serif; font-weight:700; font-size:20px; margin:0 0 18px;}
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block; font-family:'IBM Plex Mono', monospace; font-size:11px;
+    text-transform:uppercase; letter-spacing:0.6px; color:var(--text-soft); margin-bottom:6px;
+  }
+  .field input[type=text], .field select, .field textarea{
+    width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--line);
+    font-size:14px; font-family:'IBM Plex Sans', sans-serif; outline:none; color:var(--ink);
+    background:var(--paper);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{border-color:var(--wire); background:#fff;}
+  .field textarea{resize:vertical; min-height:70px;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+
+  .step-row{display:flex; gap:8px; margin-bottom:8px; align-items:center;}
+  .step-row input{flex:1;}
+  .step-del{border:none; background:none; color:var(--status-crit); cursor:pointer; font-size:16px; padding:4px 6px;}
+  .add-step-btn{
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:var(--wire);
+    background:none; border:none; cursor:pointer; padding:4px 0; font-weight:600;
+  }
+
+  /* ATTACHMENTS */
+  .attach-dropzone{
+    border:1.5px dashed var(--line); border-radius:8px; padding:14px;
+    text-align:center; cursor:pointer; background:var(--paper);
+  }
+  .attach-dropzone:hover{border-color:var(--wire); background:var(--wire-soft);}
+  .attach-dropzone-label{
+    font-size:13px; color:var(--text-soft); font-family:'IBM Plex Sans', sans-serif;
+  }
+  .attach-hint{
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:#9AA5B4; margin-top:8px;
+  }
+  .attach-list{margin-top:10px; display:flex; flex-direction:column; gap:6px;}
+  .attach-item{
+    display:flex; align-items:center; gap:8px; padding:7px 10px;
+    border:1px solid var(--line); border-radius:7px; background:#fff; font-size:12.5px;
+  }
+  .attach-icon{flex:none; font-size:15px;}
+  .attach-info{flex:1; min-width:0;}
+  .attach-name{
+    font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .attach-size{font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--text-soft);}
+  .attach-del{
+    border:none; background:none; color:var(--status-crit); cursor:pointer;
+    font-size:15px; padding:2px 4px; flex:none;
+  }
+  .attach-thumb{width:32px; height:32px; object-fit:cover; border-radius:5px; flex:none; border:1px solid var(--line);}
+
+  .detail-attach-list{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+  .detail-attach-item{
+    display:flex; align-items:center; gap:7px; padding:6px 10px;
+    border:1px solid var(--line); border-radius:7px; background:#fff;
+    font-size:12px; text-decoration:none; color:var(--ink); max-width:220px;
+  }
+  .detail-attach-item:hover{border-color:var(--wire); background:var(--wire-soft);}
+  .detail-attach-name{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .detail-attach-thumb{width:22px; height:22px; object-fit:cover; border-radius:4px; flex:none;}
+
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:20px;}
+  .btn-primary{
+    background:var(--ink); color:#fff; border:none; border-radius:8px;
+    padding:10px 18px; font-weight:600; font-size:13.5px; cursor:pointer;
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .btn-secondary{
+    background:none; border:1px solid var(--line); border-radius:8px;
+    padding:10px 18px; font-weight:600; font-size:13.5px; cursor:pointer; color:var(--text-soft);
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+
+  .loading-note{
+    text-align:center; padding:40px; color:var(--text-soft);
+    font-family:'IBM Plex Mono', monospace; font-size:13px;
+  }
+
+  @media (max-width:560px){
+    .field-row{grid-template-columns:1fr;}
+    .log-meta{display:none;}
+  }
+
+  .btn-stats{
+    background:none; border:1px solid #2A3446; color:#fff; border-radius:8px;
+    padding:9px 14px; font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap;
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .btn-stats:hover{border-color:var(--wire); color:var(--wire);}
+
+  /* STATS PANEL */
+  .stats-panel{
+    background:var(--surface); border:1px solid var(--line); border-radius:10px;
+    padding:20px 22px; margin-bottom:20px;
+  }
+  .stats-top{display:flex; align-items:baseline; gap:10px; margin-bottom:18px;}
+  .stats-total-num{font-family:'IBM Plex Sans Condensed', sans-serif; font-weight:700; font-size:32px; color:var(--ink);}
+  .stats-total-label{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--text-soft);}
+  .stats-grid{display:grid; grid-template-columns:1fr 1fr; gap:24px;}
+  .stats-block{grid-column:span 1;}
+  .stats-block.full{grid-column:1/-1;}
+  .stat-row{display:flex; align-items:center; gap:10px; margin-bottom:9px; font-size:13px;}
+  .stat-label{
+    width:120px; flex:none; font-family:'IBM Plex Mono', monospace; font-size:11.5px;
+    color:var(--text-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .stat-track{flex:1; height:8px; background:var(--paper); border-radius:4px; overflow:hidden;}
+  .stat-fill{height:100%; background:var(--wire); border-radius:4px;}
+  .stat-count{width:24px; text-align:right; font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--ink); flex:none;}
+
+  .trend-chart{display:flex; align-items:flex-end; gap:6px; height:130px; margin-top:8px;}
+  .trend-bar-wrap{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; min-width:0;}
+  .trend-bar-track{
+    flex:1; width:100%; max-width:24px; display:flex; align-items:flex-end;
+    background:var(--paper); border-radius:4px; overflow:hidden;
+  }
+  .trend-bar-fill{width:100%; background:var(--wire); border-radius:3px 3px 0 0; min-height:2px;}
+  .trend-count{font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--ink); margin-top:4px;}
+  .trend-label{font-family:'IBM Plex Mono', monospace; font-size:9.5px; color:var(--text-soft); margin-top:2px; white-space:nowrap;}
+
+  @media (max-width:560px){
+    .stats-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-row">
+      <div class="wordmark">RUN<span>BOOK</span></div>
+      <div class="counter mono" id="counterText">memuat...</div>
+      <div class="search-wrap">
+        <input type="text" id="searchInput" placeholder="Cari judul, gejala, error, atau tag..." oninput="applyFilters()" />
+      </div>
+      <button class="btn-stats" onclick="toggleStats()">📊 Statistik</button>
+      <button class="btn-new" onclick="openForm()">+ Catat Insiden Baru</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="stats-panel" id="statsPanel" style="display:none;">
+      <div class="stats-top">
+        <span class="stats-total-num" id="statsTotalNum">0</span>
+        <span class="stats-total-label">total insiden terdokumentasi</span>
+      </div>
+      <div class="stats-grid">
+        <div class="stats-block">
+          <div class="detail-label">Per Kategori</div>
+          <div id="statsCategory"></div>
+        </div>
+        <div class="stats-block">
+          <div class="detail-label">Per Tingkat Keparahan</div>
+          <div id="statsSeverity"></div>
+        </div>
+        <div class="stats-block full">
+          <div class="detail-label">Kontribusi per Personel</div>
+          <div id="statsAuthor"></div>
+        </div>
+        <div class="stats-block full">
+          <div class="detail-label">Tren per Bulan (12 Bulan Terakhir)</div>
+          <div class="trend-chart" id="trendChart"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-row" id="filterRow"></div>
+    <div id="listWrap">
+      <div class="loading-note">Memuat data runbook bersama tim...</div>
+    </div>
+  </div>
+
+  <!-- MODAL FORM -->
+  <div class="modal-overlay" id="formOverlay">
+    <div class="modal">
+      <h2 class="modal-title" id="formTitle">Catat Insiden Baru</h2>
+      <div class="field">
+        <label>Judul Insiden</label>
+        <input type="text" id="fTitle" placeholder="Mis. Printer HP LaserJet tidak terdeteksi di jaringan" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Kategori</label>
+          <select id="fCategory">
+            <option>Hardware</option>
+            <option>Software</option>
+            <option>Jaringan</option>
+            <option>Printer</option>
+            <option>Email</option>
+            <option>Server</option>
+            <option>Aplikasi Bisnis</option>
+            <option>Lainnya</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tingkat Keparahan</label>
+          <select id="fSeverity">
+            <option value="ok">Rendah</option>
+            <option value="warn">Sedang</option>
+            <option value="crit">Tinggi</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Gejala / Masalah</label>
+        <textarea id="fProblem" placeholder="Apa yang dilaporkan atau terjadi? Sertakan pesan error kalau ada."></textarea>
+      </div>
+      <div class="field">
+        <label>Lampiran (screenshot, foto, dokumen)</label>
+        <div class="attach-dropzone" onclick="document.getElementById('fAttachInput').click()">
+          <div class="attach-dropzone-label">📎 Klik buat pilih file, atau lampirkan langsung foto/screenshot</div>
+        </div>
+        <input type="file" id="fAttachInput" multiple accept="image/*,.pdf,.doc,.docx,.txt,.log" style="display:none" onchange="handleAttachInput(event)" />
+        <div class="attach-hint">Maks. 800KB per file. Cocok buat screenshot error atau bukti kecil lainnya.</div>
+        <div class="attach-list" id="attachList"></div>
+      </div>
+      <div class="field">
+        <label>Penyebab</label>
+        <textarea id="fCause" placeholder="Akar masalah setelah ditelusuri"></textarea>
+      </div>
+      <div class="field">
+        <label>Langkah Penyelesaian</label>
+        <div id="stepsWrap"></div>
+        <button type="button" class="add-step-btn" onclick="addStepRow()">+ tambah langkah</button>
+      </div>
+      <div class="field">
+        <label>Tags (pisahkan pakai koma)</label>
+        <input type="text" id="fTags" placeholder="mis. printer, driver, jaringan-kantor" />
+      </div>
+      <div class="field">
+        <label>Dicatat oleh</label>
+        <input type="text" id="fAuthor" placeholder="Nama kamu" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeForm()">Batal</button>
+        <button class="btn-primary" onclick="submitForm()">Simpan Insiden</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const CATEGORIES = ["Hardware","Software","Jaringan","Printer","Email","Server","Aplikasi Bisnis","Lainnya"];
+const SEVERITY_LABEL = { ok:"Rendah", warn:"Sedang", crit:"Tinggi" };
+const STORAGE_KEY = "runbook-articles";
+
+let articles = [];
+let activeCategory = "Semua";
+let editingId = null;
+let stepIdCounter = 1;
+let stagedAttachments = [];
+const MAX_ATTACH_BYTES = 800 * 1024;
+
+async function loadArticles(){
+  try{
+    const res = await fetch('/api/incidents');
+    if(!res.ok) throw new Error('Gagal memuat data dari server');
+    return await res.json();
+  }catch(e){
+    console.error(e);
+    alert('Gagal memuat data dari server. Pastikan server backend jalan.');
+    return [];
+  }
+}
+async function saveArticles(list){
+  try{
+    const res = await fetch('/api/incidents', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(list)
+    });
+    if(!res.ok) throw new Error('Gagal menyimpan data ke server');
+  }catch(e){
+    console.error(e);
+    alert('Gagal menyimpan data ke server. Cek koneksi ke server backend.');
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function formatDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function renderFilters(){
+  const row = document.getElementById('filterRow');
+  const cats = ["Semua", ...CATEGORIES];
+  row.innerHTML = cats.map(c => `
+    <span class="chip ${activeCategory === c ? 'on' : ''}" onclick="setCategory('${c}')">${c}</span>
+  `).join('');
+}
+function setCategory(c){
+  activeCategory = c;
+  renderFilters();
+  applyFilters();
+}
+
+function applyFilters(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  let filtered = articles;
+  if(activeCategory !== "Semua"){
+    filtered = filtered.filter(a => a.category === activeCategory);
+  }
+  if(q){
+    filtered = filtered.filter(a => {
+      const haystack = [a.title, a.problem, a.cause, (a.steps||[]).join(' '), (a.tags||[]).join(' ')].join(' ').toLowerCase();
+      return haystack.includes(q);
+    });
+  }
+  renderList(filtered);
+  if(statsOpen) renderStats();
+}
+
+function renderList(list){
+  const wrap = document.getElementById('listWrap');
+  document.getElementById('counterText').textContent = `${articles.length} insiden terdokumentasi`;
+
+  if(articles.length === 0){
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <div class="display">Belum ada insiden tercatat</div>
+        <p>Runbook ini masih kosong. Catat kasus pertama supaya tim gak analisis dari nol lagi lain kali.</p>
+      </div>`;
+    return;
+  }
+  if(list.length === 0){
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <div class="display">Gak ketemu hasilnya</div>
+        <p>Coba kata kunci lain atau ganti filter kategori.</p>
+      </div>`;
+    return;
+  }
+
+  const sorted = [...list].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+  wrap.innerHTML = `<div class="log-list">` + sorted.map(a => {
+    const dotClass = a.severity === 'crit' ? 'dot-crit' : a.severity === 'warn' ? 'dot-warn' : 'dot-ok';
+    return `
+    <div class="log-entry">
+      <div class="log-head" onclick="toggleDetail('${a.id}')">
+        <div class="status-dot ${dotClass}"></div>
+        <div class="log-main">
+          <div class="log-tagrow">${escapeHtml(a.category)} · ${SEVERITY_LABEL[a.severity]}</div>
+          <div class="log-title">${escapeHtml(a.title)}</div>
+          <div class="log-excerpt">${escapeHtml(a.problem)}</div>
+        </div>
+        <div class="log-meta">${escapeHtml(a.author || '—')}<br/>${formatDate(a.updatedAt)}</div>
+        <div class="chevron" id="chev-${a.id}">▾</div>
+      </div>
+      <div class="log-detail" id="detail-${a.id}">
+        <div class="detail-block">
+          <div class="detail-label">Gejala / Masalah</div>
+          <div class="detail-text">${escapeHtml(a.problem)}</div>
+        </div>
+        <div class="detail-block">
+          <div class="detail-label">Penyebab</div>
+          <div class="detail-text">${escapeHtml(a.cause || '—')}</div>
+        </div>
+        <div class="detail-block">
+          <div class="detail-label">Langkah Penyelesaian</div>
+          <ol class="steps-list">
+            ${(a.steps||[]).map(s => `<li>${escapeHtml(s)}</li>`).join('') || '<li>—</li>'}
+          </ol>
+        </div>
+        ${(a.attachments && a.attachments.length) ? `
+        <div class="detail-block">
+          <div class="detail-label">Lampiran</div>
+          <div class="detail-attach-list">
+            ${a.attachments.map(att => `
+              <a class="detail-attach-item" href="${att.dataUrl}" download="${escapeHtml(att.name)}" title="${escapeHtml(att.name)}">
+                ${att.type && att.type.startsWith('image/')
+                  ? `<img class="detail-attach-thumb" src="${att.dataUrl}" />`
+                  : `<span>📄</span>`}
+                <span class="detail-attach-name">${escapeHtml(att.name)}</span>
+              </a>
+            `).join('')}
+          </div>
+        </div>` : ''}
+        ${(a.tags && a.tags.length) ? `<div class="tag-pills">${a.tags.map(t => `<span class="tag-pill">#${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+        <div class="detail-actions">
+          <button class="btn-small" onclick="editArticle('${a.id}')">Edit</button>
+          <button class="btn-small danger" onclick="deleteArticle('${a.id}')">Hapus</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+function toggleDetail(id){
+  const el = document.getElementById(`detail-${id}`);
+  const chev = document.getElementById(`chev-${id}`);
+  const open = el.classList.toggle('open');
+  chev.textContent = open ? '▴' : '▾';
+}
+
+/* FORM */
+function openForm(){
+  editingId = null;
+  document.getElementById('formTitle').textContent = 'Catat Insiden Baru';
+  document.getElementById('fTitle').value = '';
+  document.getElementById('fCategory').value = 'Hardware';
+  document.getElementById('fSeverity').value = 'warn';
+  document.getElementById('fProblem').value = '';
+  document.getElementById('fCause').value = '';
+  document.getElementById('fTags').value = '';
+  document.getElementById('fAuthor').value = '';
+  document.getElementById('stepsWrap').innerHTML = '';
+  stepIdCounter = 1;
+  addStepRow();
+  stagedAttachments = [];
+  renderAttachList();
+  document.getElementById('formOverlay').classList.add('open');
+}
+function closeForm(){
+  document.getElementById('formOverlay').classList.remove('open');
+}
+function addStepRow(value){
+  const wrap = document.getElementById('stepsWrap');
+  const id = stepIdCounter++;
+  const row = document.createElement('div');
+  row.className = 'step-row';
+  row.id = `step-${id}`;
+  row.innerHTML = `
+    <input type="text" placeholder="Langkah ${wrap.children.length + 1}" value="${value ? escapeHtml(value) : ''}" />
+    <button type="button" class="step-del" onclick="document.getElementById('step-${id}').remove()">✕</button>
+  `;
+  wrap.appendChild(row);
+}
+
+function fileToDataUrl(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Gagal membaca file'));
+    reader.readAsDataURL(file);
+  });
+}
+function formatBytes(bytes){
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+async function handleAttachInput(e){
+  const files = Array.from(e.target.files || []);
+  const rejected = [];
+  for(const file of files){
+    if(file.size > MAX_ATTACH_BYTES){
+      rejected.push(file.name);
+      continue;
+    }
+    try{
+      const dataUrl = await fileToDataUrl(file);
+      stagedAttachments.push({
+        id: 'att-' + Date.now() + '-' + Math.floor(Math.random()*1000),
+        name: file.name,
+        type: file.type || 'application/octet-stream',
+        size: file.size,
+        dataUrl
+      });
+    }catch(err){
+      rejected.push(file.name);
+    }
+  }
+  e.target.value = '';
+  renderAttachList();
+  if(rejected.length){
+    alert('File ini gak bisa dilampirkan (kemungkinan lebih dari 800KB):\n' + rejected.join('\n'));
+  }
+}
+function removeAttachment(id){
+  stagedAttachments = stagedAttachments.filter(a => a.id !== id);
+  renderAttachList();
+}
+function renderAttachList(){
+  const wrap = document.getElementById('attachList');
+  if(!wrap) return;
+  wrap.innerHTML = stagedAttachments.map(a => `
+    <div class="attach-item">
+      ${a.type.startsWith('image/')
+        ? `<img class="attach-thumb" src="${a.dataUrl}" />`
+        : `<span class="attach-icon">📄</span>`}
+      <div class="attach-info">
+        <div class="attach-name">${escapeHtml(a.name)}</div>
+        <div class="attach-size">${formatBytes(a.size)}</div>
+      </div>
+      <button type="button" class="attach-del" onclick="removeAttachment('${a.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+function editArticle(id){
+  const a = articles.find(x => x.id === id);
+  if(!a) return;
+  editingId = id;
+  document.getElementById('formTitle').textContent = 'Edit Insiden';
+  document.getElementById('fTitle').value = a.title;
+  document.getElementById('fCategory').value = a.category;
+  document.getElementById('fSeverity').value = a.severity;
+  document.getElementById('fProblem').value = a.problem;
+  document.getElementById('fCause').value = a.cause || '';
+  document.getElementById('fTags').value = (a.tags || []).join(', ');
+  document.getElementById('fAuthor').value = a.author || '';
+  document.getElementById('stepsWrap').innerHTML = '';
+  stepIdCounter = 1;
+  (a.steps && a.steps.length ? a.steps : ['']).forEach(s => addStepRow(s));
+  stagedAttachments = (a.attachments || []).map(att => ({...att}));
+  renderAttachList();
+  document.getElementById('formOverlay').classList.add('open');
+}
+
+async function submitForm(){
+  const title = document.getElementById('fTitle').value.trim();
+  const problem = document.getElementById('fProblem').value.trim();
+  if(!title || !problem){
+    alert('Judul dan gejala/masalah wajib diisi ya.');
+    return;
+  }
+  const category = document.getElementById('fCategory').value;
+  const severity = document.getElementById('fSeverity').value;
+  const cause = document.getElementById('fCause').value.trim();
+  const author = document.getElementById('fAuthor').value.trim();
+  const tags = document.getElementById('fTags').value.split(',').map(t => t.trim()).filter(Boolean);
+  const steps = Array.from(document.querySelectorAll('#stepsWrap input')).map(i => i.value.trim()).filter(Boolean);
+  const attachments = stagedAttachments.slice();
+
+  const now = new Date().toISOString();
+  let current = await loadArticles();
+
+  if(editingId){
+    current = current.map(a => a.id === editingId ? {
+      ...a, title, category, severity, problem, cause, tags, steps, author, attachments, updatedAt: now
+    } : a);
+  } else {
+    current.push({
+      id: 'inc-' + Date.now() + '-' + Math.floor(Math.random()*1000),
+      title, category, severity, problem, cause, tags, steps, author, attachments,
+      createdAt: now, updatedAt: now
+    });
+  }
+
+  await saveArticles(current);
+  articles = current;
+  closeForm();
+  renderFilters();
+  applyFilters();
+}
+
+async function deleteArticle(id){
+  if(!confirm('Hapus insiden ini dari runbook? Tindakan ini gak bisa dibatalkan.')) return;
+  let current = await loadArticles();
+  current = current.filter(a => a.id !== id);
+  await saveArticles(current);
+  articles = current;
+  renderFilters();
+  applyFilters();
+}
+
+let statsOpen = false;
+function toggleStats(){
+  statsOpen = !statsOpen;
+  document.getElementById('statsPanel').style.display = statsOpen ? 'block' : 'none';
+  if(statsOpen) renderStats();
+}
+
+function renderStats(){
+  document.getElementById('statsTotalNum').textContent = articles.length;
+
+  const catCounts = {};
+  CATEGORIES.forEach(c => catCounts[c] = 0);
+  articles.forEach(a => { catCounts[a.category] = (catCounts[a.category] || 0) + 1; });
+  const maxCat = Math.max(1, ...Object.values(catCounts));
+  const catSorted = Object.entries(catCounts).sort((a,b) => b[1] - a[1]);
+  document.getElementById('statsCategory').innerHTML = catSorted.map(([name, count]) => `
+    <div class="stat-row">
+      <div class="stat-label">${escapeHtml(name)}</div>
+      <div class="stat-track"><div class="stat-fill" style="width:${(count/maxCat*100)}%;"></div></div>
+      <div class="stat-count">${count}</div>
+    </div>
+  `).join('');
+
+  const sevCounts = { ok:0, warn:0, crit:0 };
+  articles.forEach(a => { sevCounts[a.severity] = (sevCounts[a.severity] || 0) + 1; });
+  const maxSev = Math.max(1, ...Object.values(sevCounts));
+  const sevOrder = [['ok','Rendah','var(--status-ok)'], ['warn','Sedang','var(--status-warn)'], ['crit','Tinggi','var(--status-crit)']];
+  document.getElementById('statsSeverity').innerHTML = sevOrder.map(([key, label, color]) => `
+    <div class="stat-row">
+      <div class="stat-label">${label}</div>
+      <div class="stat-track"><div class="stat-fill" style="width:${(sevCounts[key]/maxSev*100)}%; background:${color};"></div></div>
+      <div class="stat-count">${sevCounts[key]}</div>
+    </div>
+  `).join('');
+
+  const authorCounts = {};
+  articles.forEach(a => {
+    const name = (a.author && a.author.trim()) ? a.author.trim() : 'Tanpa nama';
+    authorCounts[name] = (authorCounts[name] || 0) + 1;
+  });
+  const authorSorted = Object.entries(authorCounts).sort((a,b) => b[1] - a[1]);
+  const maxAuthor = Math.max(1, ...Object.values(authorCounts).concat([0]));
+  document.getElementById('statsAuthor').innerHTML = authorSorted.length ? authorSorted.map(([name, count]) => `
+    <div class="stat-row">
+      <div class="stat-label">${escapeHtml(name)}</div>
+      <div class="stat-track"><div class="stat-fill" style="width:${(count/maxAuthor*100)}%; background:var(--ink);"></div></div>
+      <div class="stat-count">${count}</div>
+    </div>
+  `).join('') : '<div class="stat-row"><span class="stat-label">Belum ada data</span></div>';
+
+  renderMonthlyTrend();
+}
+
+function renderMonthlyTrend(){
+  const now = new Date();
+  const months = [];
+  for(let i = 11; i >= 0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      key: `${d.getFullYear()}-${d.getMonth()}`,
+      label: d.toLocaleDateString('id-ID', { month:'short', year:'2-digit' }),
+      count: 0
+    });
+  }
+  articles.forEach(a => {
+    const d = new Date(a.createdAt);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    const m = months.find(mm => mm.key === key);
+    if(m) m.count++;
+  });
+  const max = Math.max(1, ...months.map(m => m.count));
+  document.getElementById('trendChart').innerHTML = months.map(m => `
+    <div class="trend-bar-wrap">
+      <div class="trend-bar-track"><div class="trend-bar-fill" style="height:${(m.count/max*100)}%;"></div></div>
+      <div class="trend-count">${m.count}</div>
+      <div class="trend-label">${m.label}</div>
+    </div>
+  `).join('');
+}
+
+async function init(){
+  renderFilters();
+  articles = await loadArticles();
+  applyFilters();
+}
+init();
+</script>
+</body>
+</html>

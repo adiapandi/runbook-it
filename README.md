@@ -1,4 +1,4 @@
-# IT Runbook — Team Knowledge Base
+# IT Runbook — Team Knowledge Base (server version)
 
 A web app for logging and searching IT incident history, complete with resolution steps, root causes, and supporting attachments. This version uses a **Node.js + Express** backend with a **SQLite** database, making it suitable for hosting on an internal VM so the whole team accesses the same centralized data.
 
