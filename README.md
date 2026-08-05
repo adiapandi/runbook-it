@@ -19,8 +19,6 @@ Aplikasi web ringan untuk mencatat dan mencari riwayat insiden IT, lengkap denga
 3. Isi detail insiden, lampirkan bukti kalau ada, lalu simpan.
 4. Gunakan sidebar kategori atau kolom pencarian untuk menemukan insiden lama.
 
-Tidak perlu instalasi atau server tambahan — semua berjalan langsung di browser.
-
 ## Struktur Proyek
 
 ```
