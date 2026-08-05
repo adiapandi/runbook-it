@@ -13,7 +13,7 @@ A web app for logging and searching IT incident history, complete with resolutio
 ## Project Structure
 
 ```
-runbook-server/
+runbook-it/
 ├── server.js         # Express backend (API + serves frontend)
 ├── package.json
 ├── public/
@@ -28,7 +28,7 @@ runbook-server/
 
 ```bash
 # 1. Go into the project folder
-cd runbook-server
+cd runbook-it
 
 # 2. Install dependencies
 npm install
