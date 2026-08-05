@@ -29,6 +29,14 @@ runbook-it/
 └── README.md
 ```
 
+## Overview
+
+```
+<img width="1113" height="381" alt="home" src="https://github.com/user-attachments/assets/6b8c9565-3b59-4cc8-b2c9-046cacde0e99" />
+<img width="444" height="647" alt="form add incident" src="https://github.com/user-attachments/assets/ac1f98c2-2d56-432e-a0c0-8df347f567e4" />
+<img width="1017" height="647" alt="statistik" src="https://github.com/user-attachments/assets/31ebec70-46dd-40b6-9436-60c6130ed3df" />
+```
+
 ## Catatan
 
 - Data insiden bersifat *shared* — semua orang yang mengakses aplikasi ini melihat data yang sama.
