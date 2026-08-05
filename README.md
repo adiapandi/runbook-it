@@ -1,78 +1,78 @@
-# Runbook IT — Basis Pengetahuan Tim (versi server)
+# IT Runbook — Team Knowledge Base
 
-Aplikasi web untuk mencatat dan mencari riwayat insiden IT, lengkap dengan langkah penyelesaian, penyebab, dan lampiran bukti. Versi ini pakai backend **Node.js + Express** dan database **SQLite**, cocok di-hosting di VM internal supaya seluruh tim mengakses data yang sama secara terpusat.
+A web app for logging and searching IT incident history, complete with resolution steps, root causes, and supporting attachments. This version uses a **Node.js + Express** backend with a **SQLite** database, making it suitable for hosting on an internal VM so the whole team accesses the same centralized data.
 
-## Fitur
+## Features
 
-- Catat insiden baru: judul, kategori, tingkat keparahan, gejala/masalah, penyebab, langkah penyelesaian, tags, pencatat.
-- Lampiran (screenshot/foto/dokumen, maks. 800KB per file).
-- Filter kategori, pencarian, dan ringkasan statistik.
-- Edit & hapus insiden.
-- Data tersimpan terpusat di database SQLite di server — semua anggota tim lihat data yang sama.
+- Log new incidents: title, category, severity, symptoms/problem, root cause, resolution steps, tags, reporter.
+- Attachments (screenshots/photos/documents, max 800KB per file).
+- Category filtering, search, and summary statistics.
+- Edit & delete incidents.
+- Data stored centrally in a SQLite database on the server — the whole team sees the same data.
 
-## Struktur Proyek
+## Project Structure
 
 ```
 runbook-server/
-├── server.js         # Backend Express (API + serve frontend)
+├── server.js         # Express backend (API + serves frontend)
 ├── package.json
 ├── public/
 │   └── index.html    # Frontend (single-file HTML/CSS/JS)
 └── data/
-    └── runbook.db     # Database SQLite (dibuat otomatis saat pertama jalan)
+    └── runbook.db     # SQLite database (created automatically on first run)
 ```
 
-## Cara Menjalankan (di VM internal)
+## Running It (on an internal VM)
 
-**Prasyarat:** Node.js versi 18 ke atas sudah terpasang di VM.
+**Prerequisite:** Node.js version 18 or later installed on the VM.
 
 ```bash
-# 1. Masuk ke folder project
+# 1. Go into the project folder
 cd runbook-server
 
-# 2. Install dependency
+# 2. Install dependencies
 npm install
 
-# 3. Jalankan server
+# 3. Start the server
 npm start
 ```
 
-Setelah jalan, buka `http://<ip-vm-kamu>:3000` dari browser mana pun di jaringan internal.
+Once running, open `http://<your-vm-ip>:3000` from any browser on the internal network.
 
-Mau ganti port? Set environment variable `PORT`:
+Want a different port? Set the `PORT` environment variable:
 ```bash
 PORT=8080 npm start
 ```
 
-## Menjalankan Terus-Menerus (Opsional)
+## Keep It Running (Optional)
 
-Supaya server tetap jalan meski terminal ditutup atau VM restart, pakai [pm2](https://pm2.keymetrics.io/):
+To keep the server running after closing the terminal or after a VM restart, use [pm2](https://pm2.keymetrics.io/):
 
 ```bash
 npm install -g pm2
 pm2 start server.js --name runbook-it
 pm2 save
-pm2 startup   # ikuti instruksi yang muncul biar auto-start saat VM boot
+pm2 startup   # follow the printed instructions to auto-start on VM boot
 ```
 
 ## API
 
-| Method | Endpoint          | Keterangan                          |
-|--------|-------------------|--------------------------------------|
-| GET    | `/api/incidents`  | Ambil semua insiden (array JSON)     |
-| POST   | `/api/incidents`  | Simpan/replace seluruh daftar insiden|
-| GET    | `/api/health`     | Cek status server                    |
+| Method | Endpoint          | Description                            |
+|--------|-------------------|------------------------------------------|
+| GET    | `/api/incidents`  | Get all incidents (JSON array)           |
+| POST   | `/api/incidents`  | Save/replace the entire incident list    |
+| GET    | `/api/health`     | Check server status                      |
 
-## Backup Data
+## Backing Up Data
 
-Semua data ada di satu file: `data/runbook.db`. Backup rutin cukup dengan copy file ini:
+All data lives in a single file: `data/runbook.db`. Regular backups are as simple as copying this file:
 
 ```bash
 cp data/runbook.db backup/runbook-$(date +%Y%m%d).db
 ```
 
-## Catatan & Batasan
+## Notes & Limitations
 
-- Lampiran disimpan langsung sebagai base64 di dalam database (mengikuti desain versi single-file sebelumnya). Ini simpel dan cukup untuk pemakaian tim kecil–menengah, tapi kalau lampiran sudah banyak dan besar, database bisa membengkak. Kalau nanti butuh skala lebih besar, lampiran sebaiknya dipindah jadi file terpisah di disk (bukan base64 di DB) — bisa diminta dibantu kalau perlu.
-- Belum ada autentikasi/login. Kalau VM-nya bisa diakses banyak orang di luar tim IT, sebaiknya ditambah reverse proxy (nginx) dengan basic auth, atau batasi akses lewat firewall/VPN internal.
-- Endpoint `POST /api/incidents` menerima seluruh daftar insiden sekaligus (bukan satu-per-satu), mengikuti pola penyimpanan versi sebelumnya. Cukup aman untuk data insiden dalam jumlah wajar (ratusan–ribuan entri).
+- Attachments are stored directly as base64 inside the database (following the design of the earlier single-file version). This is simple and works fine for a small-to-medium team, but if attachments grow large and numerous, the database can bloat. If you need to scale up later, attachments should be moved to separate files on disk instead of base64 in the DB — happy to help with that when needed.
+- No authentication/login yet. If the VM is reachable by people outside the IT team, consider adding a reverse proxy (nginx) with basic auth, or restricting access via firewall/internal VPN.
+- The `POST /api/incidents` endpoint accepts the entire incident list at once (not one-by-one), following the same storage pattern as the previous version. This is fine for a reasonable number of records (hundreds to thousands of entries).
